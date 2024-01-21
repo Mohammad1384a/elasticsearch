@@ -2,6 +2,7 @@ const { indexRouter } = require("./router/index.router");
 const experss = require("express");
 const app = experss();
 const createError = require("http-errors");
+const server = require("http").createServer(app);
 require("dotenv").config();
 const { PORT } = process.env;
 app.use(experss.urlencoded({ extended: true }));
@@ -17,7 +18,6 @@ app.use((err, req, res, next) => {
     message: err.message ?? err.msg ?? "Internal Server Error",
   });
 });
-const server = require("http").createServer(app);
 
 server.listen(PORT, () => {
   console.log("listening on port " + PORT);
