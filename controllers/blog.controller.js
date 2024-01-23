@@ -53,8 +53,67 @@ async function removeBlogById(req, res, next) {
   }
 }
 
+async function updateBlog(req, res, next) {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const validItems = ["author", "title", "text"];
+    Object.keys(data).forEach((k) => {
+      if (!validItems.includes(k) || !data[k] || data[k] === "") {
+        delete data[k];
+      }
+    });
+    const updateResult = await elasticClient.update({
+      index: "blog",
+      id,
+      doc: data,
+    });
+    return res.json(updateResult);
+  } catch (error) {
+    return next(createError.InternalServerError(error));
+  }
+}
+
+async function searchByTitle(req, res, next) {
+  try {
+    const { title } = req.body;
+    const result = await elasticClient.search({
+      index: "blog",
+      query: {
+        match: {
+          title,
+        },
+      },
+    });
+    return res.json(result?.hits?.hits);
+  } catch (error) {
+    return next(createError.InternalServerError(error));
+  }
+}
+
+async function multiFieldSearch(req, res, next) {
+  try {
+    const { value } = req.query;
+    const result = await elasticClient.search({
+      index: "blog",
+      query: {
+        multi_match: {
+          query: value,
+          fields: ["title", "author"],
+        },
+      },
+    });
+    return res.json(result?.hits?.hits);
+  } catch (error) {
+    return next(createError.InternalServerError(error));
+  }
+}
+
 module.exports = {
   createBlog,
+  searchByTitle,
+  multiFieldSearch,
   getAllBlogs,
   removeBlogById,
+  updateBlog,
 };
